@@ -79,17 +79,6 @@ void Property::prp_afterChangedAbsRange(const FrameRange &range,
     emit prp_absFrameRangeChanged(range, clip);
 }
 
-void Property::prp_readProperty(eReadStream& src) {
-    prp_readProperty_impl(src);
-    if(src.evFileVersion() >= EvFormat::betterSWTAbsReadWrite)
-        SWT_readAbstraction(src);
-}
-
-void Property::prp_writeProperty(eWriteStream& dst) const {
-    prp_writeProperty_impl(dst);
-    SWT_writeAbstraction(dst);
-}
-
 QString Property::prp_tagNameXEV() const {
     const QString& name = prp_getName();
     QString result;
@@ -109,24 +98,6 @@ QString Property::prp_tagNameXEV() const {
         }
     }
     return result;
-}
-
-QDomElement Property::prp_writePropertyXEV(const XevExporter& exp) const {
-    auto result = prp_writePropertyXEV_impl(exp);
-    SWT_writeAbstractionXEV(result, exp);
-    return result;
-}
-
-void Property::prp_readPropertyXEV(const QDomElement& ele, const XevImporter& imp) {
-    prp_readPropertyXEV_impl(ele, imp);
-    SWT_readAbstractionXEV(ele, imp);
-}
-
-QDomElement Property::prp_writeNamedPropertyXEV(
-        const QString& name, const XevExporter& exp) const {
-    auto prop = prp_writePropertyXEV(exp);
-    prop.setTagName(name);
-    return prop;
 }
 
 void Property::prp_afterWholeInfluenceRangeChanged() {

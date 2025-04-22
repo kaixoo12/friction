@@ -28,7 +28,6 @@
 
 class QIODevice;
 
-#include "../Properties/property.h"
 #include "key.h"
 #include "overlappingkeylist.h"
 
@@ -41,7 +40,7 @@ class QPainter;
 class TimelineMovable;
 class SvgExporter;
 
-class CORE_EXPORT Animator : public Property {
+class CORE_EXPORT Animator {
     Q_OBJECT
     e_DECLARE_TYPE(Animator)
     friend class OverlappingKeys;
@@ -85,18 +84,6 @@ public:
                                     const int keyRectSize);
     virtual void anim_setRecording(const bool rec);
 
-    void prp_drawTimelineControls(
-            QPainter * const p, const qreal pixelsPerFrame,
-            const FrameRange &absFrameRange, const int rowHeight);
-
-    void prp_setupTreeViewMenu(PropertyMenu * const menu);
-
-    void prp_afterFrameShiftChanged(const FrameRange& oldAbsRange,
-                                    const FrameRange& newAbsRange);
-    void prp_afterChangedAbsRange(const FrameRange &range,
-                                  const bool clip = true);
-    FrameRange prp_getIdenticalRelRange(const int relFrame) const;
-    FrameRange prp_nextNonUnaryIdenticalRelRange(const int relFrame) const;
 public:
     void anim_saveCurrentValueAsKey();
     void anim_appendKey(const stdsptr<Key> &newKey);
