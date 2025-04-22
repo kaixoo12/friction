@@ -28,6 +28,7 @@
 
 class QIODevice;
 
+#include "../smartPointers/selfref.h"
 #include "../Properties/property.h"
 #include "key.h"
 #include "overlappingkeylist.h"
@@ -42,7 +43,7 @@ class QPainter;
 class TimelineMovable;
 class SvgExporter;
 
-class CORE_EXPORT Animator : QObject {
+class CORE_EXPORT Animator : public SelfRef {
     Q_OBJECT
     e_DECLARE_TYPE(Animator)
     friend class OverlappingKeys;

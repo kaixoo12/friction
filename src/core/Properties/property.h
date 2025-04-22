@@ -27,6 +27,7 @@
 #define PROPERTY_H
 
 
+#include "../smartPointers/selfref.h"
 #include "../framerange.h"
 #include "../MovablePoints/pointshandler.h"
 #include "../conncontextptr.h"
@@ -72,7 +73,7 @@ class Property;
 template<typename T> class TypeMenu;
 typedef TypeMenu<Property> PropertyMenu;
 
-class CORE_EXPORT Property : QObject {
+class CORE_EXPORT Property : public SelfRef {
     Q_OBJECT
     e_OBJECT
     e_DECLARE_TYPE(Property)
