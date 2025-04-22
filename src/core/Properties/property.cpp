@@ -32,6 +32,8 @@
 #include "ReadWrite/evformat.h"
 #include "canvas.h"
 
+#include <QObject>
+
 Property::Property(const QString& name) :
     prp_mName(name) {
     connect(this, &Property::prp_ancestorChanged, this, [this]() {

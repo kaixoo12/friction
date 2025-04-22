@@ -36,11 +36,12 @@ class QIODevice;
 
 #include <QDomElement>
 
+class QObject;
 class QPainter;
 class TimelineMovable;
 class SvgExporter;
 
-class CORE_EXPORT Animator {
+class CORE_EXPORT Animator : QObject {
     Q_OBJECT
     e_DECLARE_TYPE(Animator)
     friend class OverlappingKeys;

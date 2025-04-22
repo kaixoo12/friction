@@ -33,6 +33,7 @@
 #include "Private/esettings.h"
 
 #include <QPainter>
+#include <QObject>
 
 Animator::Animator(const QString& name) : Property(name), anim_mKeys(this) {}
 

@@ -36,6 +36,7 @@
 class Canvas;
 class ComplexAnimator;
 class Key;
+class QObject;
 class QPainter;
 class UndoRedoStack;
 class BasicTransformAnimator;
@@ -71,7 +72,7 @@ class Property;
 template<typename T> class TypeMenu;
 typedef TypeMenu<Property> PropertyMenu;
 
-class CORE_EXPORT Property {
+class CORE_EXPORT Property : QObject {
     Q_OBJECT
     e_OBJECT
     e_DECLARE_TYPE(Property)
