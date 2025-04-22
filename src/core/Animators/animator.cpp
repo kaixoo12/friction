@@ -94,12 +94,13 @@ int Animator::anim_getNextKeyRelFrame(const int relFrame) const {
     if(!nextKey) return FrameRange::EMAX;
     return nextKey->getRelFrame();
 }
-
+/*
 void Animator::prp_afterChangedAbsRange(const FrameRange &range, const bool clip) {
     if(range.inRange(anim_mCurrentAbsFrame))
         property.prp_afterChangedCurrent(UpdateReason::userChange);
     emit property.prp_absFrameRangeChanged(range, clip);
 }
+*/
 
 void Animator::anim_updateAfterChangedKey(Key * const key) {
     if(toComplexAnimator() || !key) return;
@@ -460,7 +461,7 @@ int Animator::anim_getCurrentAbsFrame() const {
 int Animator::anim_getCurrentRelFrame() const {
     return anim_mCurrentRelFrame;
 }
-
+/*
 FrameRange Animator::prp_getIdenticalRelRange(const int relFrame) const {
     if(anim_mKeys.count() <= 1) return FrameRange::EMINMAX;
     const auto pn = anim_getPrevAndNextKeyId(relFrame);
@@ -508,7 +509,8 @@ FrameRange Animator::prp_getIdenticalRelRange(const int relFrame) const {
 
     return {fId, lId};
 }
-
+*/
+/*
 FrameRange Animator::prp_nextNonUnaryIdenticalRelRange(const int relFrame) const {
     if(anim_mKeys.count() <= 1) return FrameRange::EMINMAX;
     const auto pn = anim_getPrevAndNextKeyId(relFrame);
@@ -535,7 +537,7 @@ FrameRange Animator::prp_nextNonUnaryIdenticalRelRange(const int relFrame) const
 
     return property.prp_getIdenticalRelRange(i);
 }
-
+*/
 void Animator::anim_saveCurrentValueAsKey() {
     anim_addKeyAtRelFrame(anim_getCurrentRelFrame());
 }
@@ -572,7 +574,7 @@ void anim_drawKey(QPainter * const p,
     }
     }
 }
-
+/*
 void Animator::prp_drawTimelineControls(
         QPainter * const p, const qreal pixelsPerFrame,
         const FrameRange &absFrameRange, const int rowHeight) {
@@ -607,7 +609,8 @@ void Animator::prp_drawTimelineControls(
                      color, sett.fSelectedKeyframeColor, keyRadius, type);
     }
 }
-
+*/
+/*
 #include "typemenu.h"
 void Animator::prp_setupTreeViewMenu(PropertyMenu * const menu) {
     if(menu->hasActionsForType<Animator>()) return;
@@ -634,7 +637,7 @@ void Animator::prp_afterFrameShiftChanged(const FrameRange &oldAbsRange,
     anim_updateRelFrame();
     Property::prp_afterFrameShiftChanged(oldAbsRange, newAbsRange);
 }
-
+*/
 bool Animator::anim_hasSelectedKeys() const {
     return !anim_mSelectedKeys.isEmpty();
 }

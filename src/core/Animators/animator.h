@@ -250,7 +250,7 @@ T *Animator::anim_getKeyAtRelFrame(const int frame) const {
 
 template <class T>
 T *Animator::anim_getKeyAtAbsFrame(const int frame) const {
-    return anim_getKeyAtRelFrame<T>(prp_absFrameToRelFrame(frame));
+    return anim_getKeyAtRelFrame<T>(property.prp_absFrameToRelFrame(frame));
 }
 
 template <class T>
