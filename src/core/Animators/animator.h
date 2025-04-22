@@ -28,6 +28,7 @@
 
 class QIODevice;
 
+#include "../Properties/property.h"
 #include "key.h"
 #include "overlappingkeylist.h"
 
@@ -226,6 +227,8 @@ private:
     stdptr<Key> anim_mKeyOnCurrentFrame;
     QList<Key*> anim_mSelectedKeys;
     OverlappingKeyList anim_mKeys;
+
+    Property property = nullptr;
 };
 
 template <class T>

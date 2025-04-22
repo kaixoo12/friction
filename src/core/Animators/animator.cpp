@@ -33,9 +33,10 @@
 #include "Private/esettings.h"
 
 #include <QPainter>
-#include <QObject>
 
-Animator::Animator(const QString& name) : Property(name), anim_mKeys(this) {}
+Animator::Animator(const QString& name) : anim_mKeys(this) {
+    this.property = Property(name)
+}
 
 void Animator::anim_scaleTime(const int pivotAbsFrame, const qreal scale) {
     for(const auto &key : anim_mKeys) {
@@ -94,6 +95,12 @@ int Animator::anim_getNextKeyRelFrame(const int relFrame) const {
     return nextKey->getRelFrame();
 }
 
+void Animator::prp_afterChangedAbsRange(const FrameRange &range, const bool clip) {
+    if(range.inRange(anim_mCurrentAbsFrame))
+        property.prp_afterChangedCurrent(UpdateReason::userChange);
+    emit property.prp_absFrameRangeChanged(range, clip);
+}
+
 void Animator::anim_updateAfterChangedKey(Key * const key) {
     if(toComplexAnimator() || !key) return;
     const int relFrame = key->getRelFrame();
@@ -102,6 +109,7 @@ void Animator::anim_updateAfterChangedKey(Key * const key) {
     int nextKeyRelFrame = anim_getNextKeyRelFrame(key);
     if(nextKeyRelFrame != FrameRange::EMAX) nextKeyRelFrame--;
     const FrameRange inflRange = {prevKeyRelFrame, nextKeyRelFrame};
+    property.prp_afterChangedRelRange(inflRange + property.prp_getIdenticalRelRange(relFrame));
 }
 
 void Animator::anim_setAbsFrame(const int frame) {
@@ -110,7 +118,7 @@ void Animator::anim_setAbsFrame(const int frame) {
 }
 
 void Animator::anim_updateRelFrame() {
-    anim_mCurrentRelFrame = anim_mCurrentAbsFrame;
+    anim_mCurrentRelFrame = anim_mCurrentAbsFrame - prp_getTotalFrameShift();
     anim_updateKeyOnCurrrentFrame();
 }
 
@@ -192,7 +200,12 @@ int Animator::anim_getKeyIndex(const Key * const key) const {
 }
 
 void Animator::anim_addKeysWhereOtherHasKeys(const Animator * const other) {
-    throw new UnimplementedError();
+    for(const auto& otherKey : other->anim_mKeys) {
+        const int absFrame = otherKey->getAbsFrame();
+        const int relFrame = property.prp_absFrameToRelFrame(absFrame);
+        if(!anim_getKeyAtRelFrame(relFrame))
+            anim_addKeyAtRelFrame(relFrame);
+    }
 }
 
 void Animator::anim_readKeys(eReadStream& src) {
@@ -239,6 +252,7 @@ void Animator::anim_deleteCurrentKeyAction() {
 void Animator::anim_appendKeyAction(const stdsptr<Key>& newKey) {
     anim_appendKey(newKey);
     {
+        property.prp_pushUndoRedoName("Add Key");
         UndoRedo ur;
         ur.fUndo = [this, newKey]() {
             anim_removeKey(newKey);
@@ -246,12 +260,14 @@ void Animator::anim_appendKeyAction(const stdsptr<Key>& newKey) {
         ur.fRedo = [this, newKey]() {
             anim_appendKey(newKey);
         };
+        property.prp_addUndoRedo(ur);
     }
 }
 
 void Animator::anim_removeKeyAction(const stdsptr<Key> newKey) {
     anim_removeKey(newKey);
     {
+        prp_pushUndoRedoName("Remove Key");
         UndoRedo ur;
         ur.fUndo = [this, newKey]() {
             anim_appendKey(newKey);
@@ -259,6 +275,7 @@ void Animator::anim_removeKeyAction(const stdsptr<Key> newKey) {
         ur.fRedo = [this, newKey]() {
             anim_removeKey(newKey);
         };
+        prp_addUndoRedo(ur);
     }
 }
 
@@ -367,6 +384,7 @@ void Animator::anim_setRecordingWithoutChangingKeys(const bool rec) {
 void Animator::anim_setRecordingValue(const bool rec) {
     if(rec == anim_mIsRecording) return;
     {
+        property.prp_pushUndoRedoName("Set Recording");
         UndoRedo ur;
         const auto oldValue = anim_mIsRecording;
         const auto newValue = rec;
@@ -376,6 +394,7 @@ void Animator::anim_setRecordingValue(const bool rec) {
         ur.fRedo = [this, newValue]() {
             anim_setRecordingValue(newValue);
         };
+        property.prp_addUndoRedo(ur);
     }
     anim_mIsRecording = rec;
     emit anim_isRecordingChanged();
@@ -442,6 +461,81 @@ int Animator::anim_getCurrentRelFrame() const {
     return anim_mCurrentRelFrame;
 }
 
+FrameRange Animator::prp_getIdenticalRelRange(const int relFrame) const {
+    if(anim_mKeys.count() <= 1) return FrameRange::EMINMAX;
+    const auto pn = anim_getPrevAndNextKeyId(relFrame);
+    const int prevId = pn.first;
+    const int nextId = pn.second;
+
+    Key *prevKey = anim_getKeyAtIndex(prevId);
+    Key *nextKey = anim_getKeyAtIndex(nextId);
+    const bool adjKeys = nextId - prevId == 1;
+    Key * const keyAtRelFrame = adjKeys ? nullptr :
+                                          anim_getKeyAtIndex(pn.first + 1);
+    Key *prevPrevKey = keyAtRelFrame ? keyAtRelFrame : nextKey;
+    Key *prevNextKey = keyAtRelFrame ? keyAtRelFrame : prevKey;
+
+    int fId = relFrame;
+    int lId = relFrame;
+
+    int idIt = prevId;
+    while(true) {
+        if(!prevKey) {
+            fId = FrameRange::EMIN;
+            break;
+        }
+        if(prevPrevKey) {
+            if(prevKey->differsFromKey(prevPrevKey)) break;
+        }
+        fId = prevKey->getRelFrame();
+        prevPrevKey = prevKey;
+        prevKey = anim_getKeyAtIndex(--idIt);
+    }
+
+    idIt = nextId;
+    while(true) {
+        if(!nextKey) {
+            lId = FrameRange::EMAX;
+            break;
+        }
+        if(prevNextKey) {
+            if(nextKey->differsFromKey(prevNextKey)) break;
+        }
+        lId = nextKey->getRelFrame();
+        prevNextKey = nextKey;
+        nextKey = anim_getKeyAtIndex(++idIt);
+    }
+
+    return {fId, lId};
+}
+
+FrameRange Animator::prp_nextNonUnaryIdenticalRelRange(const int relFrame) const {
+    if(anim_mKeys.count() <= 1) return FrameRange::EMINMAX;
+    const auto pn = anim_getPrevAndNextKeyId(relFrame);
+    const int prevId = pn.first;
+    const int nextId = pn.second;
+
+    Key *nextKey = anim_getKeyAtIndex(nextId);
+    const bool adjKeys = nextId - prevId == 1;
+    Key * const keyAtRelFrame = adjKeys ? nullptr :
+                                          anim_getKeyAtIndex(pn.first + 1);
+    Key *prevKey = keyAtRelFrame ? keyAtRelFrame : anim_getKeyAtIndex(prevId);
+
+    int i = relFrame;
+
+    int idIt = nextId;
+    while(true) {
+        if(!nextKey || (prevKey && !nextKey->differsFromKey(prevKey))) {
+            i = prevKey->getRelFrame();
+            break;
+        }
+        prevKey = nextKey;
+        nextKey = anim_getKeyAtIndex(++idIt);
+    }
+
+    return property.prp_getIdenticalRelRange(i);
+}
+
 void Animator::anim_saveCurrentValueAsKey() {
     anim_addKeyAtRelFrame(anim_getCurrentRelFrame());
 }
@@ -477,6 +571,68 @@ void anim_drawKey(QPainter * const p,
         p->drawEllipse(keyCenter, keyRadius, keyRadius);
     }
     }
+}
+
+void Animator::prp_drawTimelineControls(
+        QPainter * const p, const qreal pixelsPerFrame,
+        const FrameRange &absFrameRange, const int rowHeight) {
+    p->translate(property.prp_getTotalFrameShift()*pixelsPerFrame, 0);
+    const auto relRange = property.prp_absRangeToRelRange(absFrameRange);
+    const auto idRange = anim_frameRangeToKeyIdRange(relRange);
+    KeyFrameType type;
+    if(toBoundingBox()) type = KeyFrameType::object;
+    else if(toComplexAnimator()) type = KeyFrameType::propertyGroup;
+    else type = KeyFrameType::property;
+    const auto& sett = *eSettings::sInstance;
+    QColor color;
+    switch(type) {
+    case KeyFrameType::object:
+        color = sett.fObjectKeyframeColor;
+        break;
+    case KeyFrameType::propertyGroup:
+        color = sett.fPropertyGroupKeyframeColor;
+        break;
+    case KeyFrameType::property:
+        color = sett.fPropertyKeyframeColor;
+        break;
+    }
+    qreal radMult;
+    if(type == KeyFrameType::object) radMult = 0.3;
+    else radMult = 0.21;
+    const qreal keyRadius = rowHeight * radMult;
+    for(int i = idRange.fMin; i <= idRange.fMax; i++) {
+        if(i < 0 || i >= anim_mKeys.count()) continue;
+        const auto& key = anim_mKeys.atId(i);
+        anim_drawKey(p, key, pixelsPerFrame, absFrameRange.fMin, rowHeight,
+                     color, sett.fSelectedKeyframeColor, keyRadius, type);
+    }
+}
+
+#include "typemenu.h"
+void Animator::prp_setupTreeViewMenu(PropertyMenu * const menu) {
+    if(menu->hasActionsForType<Animator>()) return;
+    menu->addedActionsForType<Animator>();
+
+    const PropertyMenu::PlainSelectedOp<Animator> aOp =
+    [](Animator * animTarget) {
+        animTarget->anim_saveCurrentValueAsKey();
+    };
+    menu->addPlainAction(QIcon::fromTheme("plus"), tr("Add Key(s)"), aOp)->setDisabled(anim_getKeyOnCurrentFrame());
+
+    const PropertyMenu::PlainSelectedOp<Animator> dOp =
+    [](Animator * animTarget) {
+        animTarget->anim_deleteCurrentKeyAction();
+    };
+    menu->addPlainAction(QIcon::fromTheme("trash"), tr("Delete Key(s)"), dOp)->setEnabled(anim_getKeyOnCurrentFrame());
+
+    menu->addSeparator();
+    Property::prp_setupTreeViewMenu(menu);
+}
+
+void Animator::prp_afterFrameShiftChanged(const FrameRange &oldAbsRange,
+                                          const FrameRange &newAbsRange) {
+    anim_updateRelFrame();
+    Property::prp_afterFrameShiftChanged(oldAbsRange, newAbsRange);
 }
 
 bool Animator::anim_hasSelectedKeys() const {
@@ -571,6 +727,70 @@ void Animator::saveSVG(SvgExporter& exp,
                        const QList<Animator*> extInfl) const {
     Q_ASSERT(!transform || attrName == "transform");
 
+    const auto thisIdRange = property.prp_getIdenticalRelRange(visRange.fMin);
+    auto idRange = thisIdRange;
+    for(const auto& infl : extInfl) {
+        const auto extIdRange = infl->property.prp_getIdenticalRelRange(visRange.fMin);
+        idRange = idRange*extIdRange;
+    }
+    const int span = exp.fAbsRange.span();
+    if(idRange.inRange(visRange) || span == 1) {
+        auto value = valueGetter(visRange.fMin);
+        if(transform) {
+            value = parent.attribute(attrName) + " " +
+                    type + "(" + value + ")";
+        }
+        parent.setAttribute(attrName, value.trimmed());
+    } else {
+        const auto tagName = transform ? "animateTransform" : "animate";
+        auto anim = exp.createElement(tagName);
+        anim.setAttribute("calcMode", interpolation);
+        anim.setAttribute("attributeName", attrName);
+        if(!type.isEmpty()) anim.setAttribute("type", type);
+        const qreal div = span - 1;
+        const qreal dur = div/exp.fFps;
+        anim.setAttribute("dur", QString::number(dur)  + 's');
+        int i = visRange.fMin;
+        QStringList values;
+        QStringList keyTimes;
+        while(true) {
+            const auto value = valueGetter(i);
+            values << value;
+            const auto thisIRange = exp.fAbsRange*property.prp_getIdenticalAbsRange(i);
+            FrameRange iRange = thisIRange;
+            for(const auto& infl : extInfl) {
+                const auto extIdRange = infl->prp_getIdenticalAbsRange(i);
+                iRange = iRange*extIdRange;
+            }
+            const qreal minTime = (iRange.fMin - exp.fAbsRange.fMin)/div;
+            keyTimes << QString::number(minTime);
+            if(iRange.fMin != iRange.fMax) {
+                values << value;
+                const qreal maxTime = (iRange.fMax - exp.fAbsRange.fMin)/div;
+                keyTimes << QString::number(maxTime);
+            }
+            if(iRange.fMax >= visRange.fMax) break;
+            int newI = property.prp_nextDifferentRelFrame(i);
+            for(const auto& infl : extInfl) {
+                const auto extI = infl->prp_nextDifferentRelFrame(i);
+                newI = qMin(extI, newI);
+            }
+            i = newI;
+        }
+        if(keyTimes.isEmpty()) return;
+        if(keyTimes.last() != "1") {
+            values << values.last();
+            keyTimes << "1";
+        }
+        if(keyTimes.first() != "0") {
+            values.prepend(values.first());
+            keyTimes.prepend("0");
+        }
+        anim.setAttribute("values", values.join(';'));
+        anim.setAttribute("keyTimes", keyTimes.join(';'));
+        SvgExportHelpers::assignLoop(anim, exp.fLoop);
+        parent.appendChild(anim);
+    }
 }
 
 void Animator::saveSVG(SvgExporter& exp,
