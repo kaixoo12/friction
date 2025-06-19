@@ -73,6 +73,7 @@ set(
     widgets/bookmarkedwidget.cpp
     widgets/buttonbase.cpp
     widgets/buttonslist.cpp
+    widgets/canvaswidget.cpp
     widgets/canvassettingswidget.cpp
     widgets/canvastoolbar.cpp
     widgets/changewidthwidget.cpp
@@ -146,6 +147,7 @@ set(
     widgets/bookmarkedwidget.h
     widgets/buttonbase.h
     widgets/buttonslist.h
+    widgets/canvaswidget.h
     widgets/canvassettingswidget.h
     widgets/canvastoolbar.h
     widgets/changewidthwidget.h

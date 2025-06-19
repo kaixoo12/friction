@@ -1,0 +1,128 @@
+/*
+#
+# Friction - https://friction.graphics
+#
+# Copyright (c) Ole-André Rodlie and contributors
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# See 'README.md' for more information.
+#
+*/
+
+// Fork of enve - Copyright (C) 2016-2020 Maurycy Liebner
+
+#include "scene.h"
+
+#include "CacheHandlers/sceneframecontainer.h"
+#include "Animators/sceneboundgradient.h"
+#include "ReadWrite/ereadstream.h"
+#include "ReadWrite/ewritestream.h"
+#include "Sound/soundcomposition.h"
+#include "Private/document.h"
+#include "framerange.h"
+
+
+Scene::Scene(
+    Document& document,
+    qsptr<ContainerBox> defaultGroup,
+    const QString sceneName,
+    const int canvasWidth,
+    const int canvasHeight,
+    const qreal fps,
+    const int frameCount
+) : _currentGroup(defaultGroup)
+  , _name(sceneName)
+  , _fps(fps)
+  , _range({0, frameCount})
+  , _canvasHeight(canvasHeight)
+  , _canvasWidth(canvasWidth) {};
+
+// TODO: In C++17, make this a single default constructor
+// We currently need to overload constructor because C++14 is dumb
+Scene::Scene(
+    Document& document,
+    const QString sceneName,
+    const int canvasWidth,
+    const int canvasHeight,
+    const qreal fps,
+    const int frameCount) {
+    const auto containerBox = enve::make_shared<ContainerBox>(eBoxType::canvas);
+    Scene(document,
+          containerBox,
+          sceneName,
+          canvasWidth,
+          canvasHeight,
+          fps,
+          frameCount);
+};
+
+Scene::~Scene() {
+    emit destroyed();
+};
+
+HddCachableCacheHandler &Scene::getSoundCacheHandler()
+{
+    return _soundComposition->getCacheHandler();
+}
+
+void Scene::setCurrentGroupParentAsCurrentGroup()
+{
+    auto currentGroup = getCurrentGroup();
+
+    // TODO(kaixoo): expects a qsptr, receives a 'ContainerBox'
+    //setCurrentGroup(currentGroup->getParentGroup());
+}
+
+void Scene::saveSVG(SvgExporter& exp, DomEleTask* const eleTask) const {
+    _currentGroup->saveSVG(exp, eleTask);
+};
+
+void Scene::writeBoxOrSoundXEV(const stdsptr<XevZipFileSaver>& xevFileSaver,
+                        const RuntimeIdToWriteId& objListIdConv,
+                        const QString& path) const {
+    _currentGroup->writeBoxOrSoundXEV(xevFileSaver, objListIdConv, path);
+};
+
+void Scene::readBoxOrSoundXEV(XevReadBoxesHandler& boxReadHandler,
+                       ZipFileLoader& fileLoader, const QString& path,
+                       const RuntimeIdToWriteId& objListIdConv) {
+    _currentGroup->readBoxOrSoundXEV(boxReadHandler, fileLoader, path, objListIdConv);
+};
+
+void Scene::writeAllContained(eWriteStream &dst) const {
+    return _currentGroup->writeAllContained(dst);
+};
+
+void Scene::writeAllContainedXEV(const stdsptr<XevZipFileSaver>& fileSaver,
+                          const RuntimeIdToWriteId& objListIdConv,
+                          const QString& path) const {
+    _currentGroup->writeAllContainedXEV(fileSaver, objListIdConv, path);
+};
+
+QString Scene::makeNameUniqueForDescendants(
+        const QString &name, eBoxOrSound * const skip) {
+    return NameFixer::makeNameUnique(
+                name, [this, skip](const QString& name) {
+        return getCurrentGroup()->allDescendantsNamesStartingWith(name, skip);
+    });
+}
+
+QString Scene::makeNameUniqueForContained(
+        const QString &name, eBoxOrSound * const skip) {
+    return NameFixer::makeNameUnique(
+                name, [this, skip](const QString& name) {
+        return getCurrentGroup()->allContainedNamesStartingWith(name, skip);
+    });
+}

@@ -187,6 +187,7 @@ set(
     Private/Tasks/taskque.cpp
     Private/Tasks/taskquehandler.cpp
     Private/Tasks/taskscheduler.cpp
+    Private/scene.cpp
     Private/document.cpp
     Private/documentrw.cpp
     Private/esettings.cpp
@@ -244,6 +245,11 @@ set(
     TransformEffects/transformeffect.cpp
     TransformEffects/transformeffectcollection.cpp
     TransformEffects/transformeffectmenucreator.cpp
+    ViewLayers/basecanvas.cpp
+    ViewLayers/utils.cpp
+    ViewLayers/viewlayer_preview.cpp
+    ViewLayers/viewlayer_render.cpp
+    ViewLayers/viewlayer_selection.cpp
     XML/xevexporter.cpp
     XML/xevimporter.cpp
     XML/xevzipfilesaver.cpp
@@ -443,6 +449,8 @@ set(
     CacheHandlers/tmpsaver.h
     CacheHandlers/usedrange.h
     CacheHandlers/usepointer.h
+    Drawables/drawable.h
+    Drawables/rectangle_drawable.h
     Expressions/propertybindingbase.h
     Expressions/propertybindingparser.h
     Expressions/valuebinding.h
@@ -498,6 +506,7 @@ set(
     Private/Tasks/taskque.h
     Private/Tasks/taskquehandler.h
     Private/Tasks/taskscheduler.h
+    Private/scene.h
     Private/document.h
     Private/esettings.h
     Private/memorystructs.h
@@ -568,6 +577,12 @@ set(
     TransformEffects/transformeffect.h
     TransformEffects/transformeffectcollection.h
     TransformEffects/transformeffectmenucreator.h
+    ViewLayers/basecanvas.h
+    ViewLayers/utils.h
+    ViewLayers/viewlayer.h
+    ViewLayers/viewlayer_preview.h
+    ViewLayers/viewlayer_render.h
+    ViewLayers/viewlayer_selection.h
     XML/runtimewriteid.h
     XML/xevexporter.h
     XML/xevimporter.h
