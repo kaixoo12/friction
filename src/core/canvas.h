@@ -76,7 +76,7 @@ enum class AlignRelativeTo {
     scene, lastSelected, lastSelectedPivot, boundingBox
 };
 
-class CORE_EXPORT Canvas : public CanvasBase
+class [[deprecated]] CORE_EXPORT Canvas : public CanvasBase
 {
     friend class CanvasWindow;
     typedef qCubicSegment1DAnimator::Action SegAction;
