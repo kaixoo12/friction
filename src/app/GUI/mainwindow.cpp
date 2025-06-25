@@ -46,7 +46,6 @@
 #include "dialogs/applyexpressiondialog.h"
 #include "dialogs/markereditordialog.h"
 #include "timelinedockwidget.h"
-#include "canvaswindow.h"
 #include "GUI/BoxesList/boxscrollwidget.h"
 #include "clipboardcontainer.h"
 #include "optimalscrollarena/scrollarea.h"
@@ -218,11 +217,7 @@ MainWindow::MainWindow(Document& document,
     mFontWidget = new Ui::FontsWidget(this);
     mFontWidget->setMaximumHeight(150);
 
-    mLayoutHandler = new LayoutHandler(mDocument,
-                                       mAudioHandler,
-                                       this);
     mTimeline = new TimelineDockWidget(mDocument,
-                                       mLayoutHandler,
                                        this);
     mRenderWidget = new RenderWidget(this);
 
@@ -861,10 +856,7 @@ void MainWindow::setupMenuBar()
     cmdAddAction(mZoomInAction);
     connect(mZoomInAction, &QAction::triggered,
             this, [](){
-        const auto target = KeyFocusTarget::KFT_getCurrentTarget();
-        const auto cwTarget = dynamic_cast<CanvasWindow*>(target);
-        if (!cwTarget) { return; }
-        cwTarget->zoomInView();
+        mDocument.fActiveScene->zoomInView();
     });
 
     mZoomOutAction = zoomMenu->addAction(tr("Zoom Out", "MenuBar_View_Zoom"));
@@ -873,10 +865,7 @@ void MainWindow::setupMenuBar()
     cmdAddAction(mZoomOutAction);
     connect(mZoomOutAction, &QAction::triggered,
             this, [](){
-        const auto target = KeyFocusTarget::KFT_getCurrentTarget();
-        const auto cwTarget = dynamic_cast<CanvasWindow*>(target);
-        if (!cwTarget) { return; }
-        cwTarget->zoomOutView();
+        mDocument.fActiveScene->zoomOutView();
     });
 
     mFitViewAction = zoomMenu->addAction(tr("Fit to Canvas", "MenuBar_View_Zoom"));
@@ -884,10 +873,7 @@ void MainWindow::setupMenuBar()
     mFitViewAction->setShortcut(QKeySequence("Ctrl+0"));
     connect(mFitViewAction, &QAction::triggered,
             this, [](){
-        const auto target = KeyFocusTarget::KFT_getCurrentTarget();
-        const auto cwTarget = dynamic_cast<CanvasWindow*>(target);
-        if (!cwTarget) { return; }
-        cwTarget->fitCanvasToSize();
+        mDocument.fActiveScene->fitCanvasToSize();
     });
     cmdAddAction(mFitViewAction);
 
@@ -896,10 +882,7 @@ void MainWindow::setupMenuBar()
     fitViewWidth->setShortcut(QKeySequence("Ctrl+9"));
     connect(fitViewWidth, &QAction::triggered,
             this, []() {
-        const auto target = KeyFocusTarget::KFT_getCurrentTarget();
-        const auto cwTarget = dynamic_cast<CanvasWindow*>(target);
-        if (!cwTarget) { return; }
-        cwTarget->fitCanvasToSize(true);
+        mDocument.fActiveScene->fitCanvasToSize(true);
     });
     cmdAddAction(fitViewWidth);
 
@@ -907,10 +890,7 @@ void MainWindow::setupMenuBar()
     mResetZoomAction->setShortcut(QKeySequence("Ctrl+1"));
     connect(mResetZoomAction, &QAction::triggered,
             this, [](){
-        const auto target = KeyFocusTarget::KFT_getCurrentTarget();
-        const auto cwTarget = dynamic_cast<CanvasWindow*>(target);
-        if (!cwTarget) { return; }
-        cwTarget->resetTransformation();
+        mDocument.fActiveScene->resetTransformation();
     });
     cmdAddAction(mResetZoomAction);
 
@@ -1851,7 +1831,6 @@ void MainWindow::clearAll()
     mFillStrokeSettings->clearAll();
     mFontWidget->clearAll();
     mDocument.clear();
-    mLayoutHandler->clear();
     FilesHandler::sInstance->clear();
 
     mActions.setMovePathMode();
@@ -2177,11 +2156,6 @@ void MainWindow::cmdAddAction(QAction *act)
 {
     if (!act || eSettings::instance().fCommandPalette.contains(act)) { return; }
     eSettings::sInstance->fCommandPalette.append(act);
-}
-
-LayoutHandler *MainWindow::getLayoutHandler()
-{
-    return mLayoutHandler;
 }
 
 TimelineDockWidget *MainWindow::getTimeLineWidget()

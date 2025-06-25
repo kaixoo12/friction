@@ -53,7 +53,6 @@
 #include "MovablePoints/gradientpoint.h"
 #include "Animators/qrealkey.h"
 #include "GUI/mainwindow.h"
-#include "GUI/canvaswindow.h"
 #include "gradientwidgets/gradientwidget.h"
 #include <QMessageBox>
 #include "PathEffects/patheffectsinclude.h"
@@ -112,7 +111,8 @@ void MainWindow::loadEVFile(const QString &path)
                     mDocument.sceneCreated(scene);
                 }
             }
-            mLayoutHandler->read(readStream);
+            // TODO(kaixoo): ???
+            //mLayoutHandler->read(readStream);
             readStream.readCheckpoint("Error reading Layout");
         }
         mDocument.readScenes(readStream);
@@ -158,7 +158,8 @@ void MainWindow::saveToFile(const QString &path,
         for (const auto& scene : scenes) {
             scene->writeSettings(writeStream);
         }
-        mLayoutHandler->write(writeStream);
+        // TODO(kaixoo): ???
+        //mLayoutHandler->write(writeStream);
         writeStream.writeCheckpoint();
         mDocument.writeScenes(writeStream);
         writeStream.writeCheckpoint();
@@ -206,7 +207,8 @@ void MainWindow::saveToFileXEV(const QString &path) {
         fileSaver.processText("UI/layouts.xml", [&](QTextStream& stream) {
             QDomDocument doc;
             auto ele = doc.createElement("Layouts");
-            mLayoutHandler->writeXEV(ele, doc, objListIdConv);
+            // TODO(kaixoo): ???
+            //mLayoutHandler->writeXEV(ele, doc, objListIdConv);
             doc.appendChild(ele);
             stream << doc.toString();
         });
@@ -235,7 +237,8 @@ void MainWindow::loadXevFile(const QString &path) {
             QDomDocument doc;
             doc.setContent(src);
             const auto ele = doc.firstChildElement("Layouts");
-            mLayoutHandler->readXEV(boxReadHandler, ele, objListIdConv);
+            // TODO(kaixoo): ???
+            //mLayoutHandler->readXEV(boxReadHandler, ele, objListIdConv);
         });
 
         mDocument.readScenesXEV(boxReadHandler, fileLoader, scenes, objListIdConv);

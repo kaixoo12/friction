@@ -78,7 +78,6 @@ enum class AlignRelativeTo {
 
 class [[deprecated]] CORE_EXPORT Canvas : public CanvasBase
 {
-    friend class CanvasWindow;
     typedef qCubicSegment1DAnimator::Action SegAction;
     Q_OBJECT
     e_OBJECT
