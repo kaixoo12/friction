@@ -34,7 +34,7 @@ class BoundingBox;
 #include "MovablePoints/movablepoint.h"
 #include "conncontextobjlist.h"
 
-class CORE_EXPORT CanvasBase : public ContainerBox {
+class [[deprecated]] CORE_EXPORT CanvasBase : public ContainerBox {
     friend class Canvas;
 private:
     CanvasBase();
