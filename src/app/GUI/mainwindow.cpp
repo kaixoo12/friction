@@ -279,7 +279,8 @@ MainWindow::MainWindow(Document& document,
        this);
 
     mStackWidget = new QStackedWidget(this);
-    mStackIndexScene = mStackWidget->addWidget(mLayoutHandler->sceneLayout());
+    // TODO(kaixoo): ???
+    //mStackIndexScene = mStackWidget->addWidget(mLayoutHandler->sceneLayout());
     mStackIndexWelcome = mStackWidget->addWidget(mWelcomeDialog);
 
     mColorToolBar = new Ui::ColorToolBar(mDocument, this);
@@ -330,9 +331,10 @@ MainWindow::MainWindow(Document& document,
     mCanvasToolBar->addSeparator();
     mCanvasToolBar->addAction(QIcon::fromTheme("workspace"),
                               tr("Layout"));
-    const auto workspaceLayoutCombo = mLayoutHandler->comboWidget();
+    // TODO(kaixoo): ???
+    /*const auto workspaceLayoutCombo = mLayoutHandler->comboWidget();
     workspaceLayoutCombo->setMaximumWidth(150);
-    mCanvasToolBar->addWidget(workspaceLayoutCombo);
+    mCanvasToolBar->addWidget(workspaceLayoutCombo);*/
 
     statusBar()->addPermanentWidget(mCanvasToolBar);
 
@@ -900,7 +902,7 @@ void MainWindow::setupMenuBar()
     mNoneQuality = filteringMenu->addAction(
                 tr("None", "MenuBar_View_Filtering"), [this]() {
         eFilterSettings::sSetDisplayFilter(kNone_SkFilterQuality);
-        mStackWidget->widget(mStackIndexScene)->update();
+        //mStackWidget->widget(mStackIndexScene)->update();
 
         mLowQuality->setChecked(false);
         mMediumQuality->setChecked(false);
@@ -1425,7 +1427,8 @@ void MainWindow::openWelcomeDialog()
 
 void MainWindow::closeWelcomeDialog()
 {
-    mStackWidget->setCurrentIndex(mStackIndexScene);
+    // TODO(kaixoo): ???
+    //mStackWidget->setCurrentIndex(mStackIndexScene);
 }
 
 void MainWindow::addCanvasToRenderQue()
